@@ -33,31 +33,37 @@ server <- function(input, output) {
         person_count = c(7080, 960, 10),
         records_per_person = c(4.37, 1.12, 1.06)
     )
-    # looks like can pick up rows selected from the datatable: input$totals_rows_selected
-    output$totals <- DT::renderDT(counts, selection = list(mode = 'multiple', selected = c(2), target = 'row'))
+    output$totals <- DT::renderDT(counts, selection = list(mode = 'single', selected = c(2), target = 'row'))
+
     
-    
-    monthly_count <- tibble(
-        date = c("2020-01","2020-02", "2020-03", "2020-04"),
-        record_count = c(120, 250, 281, 220)
-    )
-    
-    
-    output$monthly_count <- renderPlot(
-            ggplot(monthly_count, aes(x=date, y=record_count)) +
-            geom_bar(stat = "identity") +
-            ggtitle("Prostate specific antigen test (psa)") +
+
+    output$monthly_count <- renderPlot({
+        
+        name <- totals$name[input$totals_rows_selected]
+        monthly_count <- tibble(
+            date = c("2020-01","2020-02", "2020-03", "2020-04"),
+            record_count = c(120, 250, 281, 220)
+        )
+        
+        
+        ggplot(monthly_count, aes(x=date, y=record_count)) +
+            geom_bar(stat="identity") +
+            ggtitle(name) +
             xlab("Month") +
             ylab("Number of records")
-    )
-   
-    summary_stat <- tibble(
-        concept = "Prostate specific antigen test (psa)",
-        sd = c(0.8280661),
-        mean = c(5.843)
-    )
+    
+    })
+        
+    
     
     output$stat_numeric <- renderPlot({
+
+        summary_stat <- tibble(
+            concept = totals$name[input$totals_rows_selected],
+            sd = c(0.8280661),
+            mean = c(5.843)
+        )
+        
         ggplot(summary_stat, aes(x=concept)) +
             geom_boxplot(
                 aes(lower = mean - sd,
